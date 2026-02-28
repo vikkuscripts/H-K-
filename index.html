@@ -1,0 +1,599 @@
+<!doctype html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Housekeeping</title>
+  <style>
+    :root{
+      --bg:#f5f6f8;
+      --card:#ffffff;
+      --accent:#0b1220;
+      --muted:#6b7280;
+      --green:#10b981;
+      --red:#ef4444;
+      --yellow:#f97316;
+      --box-shadow: 0 6px 18px rgba(12,18,30,0.06);
+      font-family: "Inter", Roboto, Arial, sans-serif;
+    }
+    body { margin:0; background:var(--bg); color:var(--accent); }
+    .container { max-width:1200px; margin:36px auto; padding:12px; position:relative; }
+    .header { text-align:center; margin-bottom:18px; }
+    .title { font-size:44px; font-weight:800; letter-spacing:1px; }
+    .subtitle{ color:var(--muted); margin-top:6px; }
+    
+    .top-cards { display:flex; gap:24px; justify-content:center; margin:28px 0; flex-wrap: wrap; }
+    .landing-card { background:var(--card); width:420px; border-radius:12px; padding:28px; box-shadow:var(--box-shadow); cursor:pointer; transition: transform 0.2s; }
+    .landing-card:hover { transform: translateY(-4px); }
+    .landing-card h3{ margin:0 0 10px; font-size:20px;}
+    .landing-card p{ color:var(--muted); margin:0 0 14px;}
+    .enter { color:#1e40af; font-weight:700; }
+
+    .toolbar { display:flex; gap:10px; align-items:center; margin:16px 0; flex-wrap: wrap;}
+    .pill { background:var(--card); padding:10px 14px; border-radius:10px; box-shadow:var(--box-shadow); display:inline-block; }
+    .search { flex:1; min-width: 200px; padding:10px 12px; border-radius:8px; border:1px solid #eceef3; background:white; }
+    select, button { padding:8px 10px; border-radius:6px; border:1px solid #e6e7eb; background:white; cursor:pointer;}
+    .counts { float:right; color:var(--muted); margin-top:6px; font-weight:500; }
+
+    .floor-title { font-weight:700; margin:24px 0 12px 0; font-size: 1.2rem; color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;}
+
+    .grid { display:grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); gap:20px; }
+    .list { display:flex; flex-direction:column; gap:12px; }
+
+    .card { background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0)); padding:18px; border-radius:14px; color:#fff; position:relative; box-shadow: 0 6px 16px rgba(7,11,20,0.06); cursor: pointer; transition: transform 0.15s; }
+    .card:hover { transform: scale(1.02); }
+
+    .grid .card { min-height:140px; text-align:center; }
+    .card .room-number { font-size:36px; font-weight:800; margin:6px 0; text-align:center; }
+    .card .area-name { font-size:22px; font-weight:800; margin:12px 0; text-align:center; line-height: 1.2; }
+    .card .meta { margin-top: 16px; font-size:13px; opacity:0.95; background: rgba(0,0,0,0.15); padding: 6px; border-radius: 6px;}
+
+    .list .card { padding:14px 18px; border-radius:12px; min-height:36px; display:flex; align-items:center; gap:12px; }
+    .list .card .room-number { font-size:20px; font-weight:800; margin:0; text-align:left; }
+    .list .card .area-name { font-size:18px; font-weight:700; margin:0; text-align:left; }
+    .list .card .meta { margin-top: 0; background: transparent; padding: 0; font-size:13px; opacity:0.95; margin-left:12px; }
+
+    .status-pill { display:inline-block; padding:6px 12px; border-radius:20px; margin:auto; text-align:center; font-weight:700; font-size:12px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);}
+    .green { background: linear-gradient(180deg,#10b981,#059669); }
+    .red { background: linear-gradient(180deg,#fb7185,#ef4444); }
+    .yellow { background: linear-gradient(180deg,#f59e0b,#d97706); }
+
+    /* Modal Styling for the Wizard Flow */
+    .modal-back { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:999; backdrop-filter: blur(4px); }
+    .modal { width:420px; background:white; border-radius:16px; padding:24px; box-shadow:0 20px 60px rgba(8,12,20,0.4); max-height: 90vh; overflow-y: auto;}
+    
+    .field { margin:16px 0; }
+    .field label { display:block; margin-bottom:8px; font-weight:700; color:#374151; font-size: 14px;}
+    
+    .large-select { width:100%; padding:12px; border-radius:8px; border:1px solid #d1d5db; box-sizing: border-box; font-size: 14px; background:white;}
+    .readonly-input { width:100%; padding:12px; border-radius:8px; border:1px solid #e5e7eb; box-sizing: border-box; font-size: 14px; background:#f8fafc; color:#6b7280; outline:none;}
+    .readonly-value { padding: 12px; background: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0; font-size: 14px; }
+    
+    .btn-block { width:100%; padding:14px; border-radius:8px; font-size:16px; font-weight:700; text-align:center; border:none; cursor:pointer; color:white; transition: 0.2s;}
+    .btn-orange { background:#f59e0b; }
+    .btn-orange:hover { background:#d97706; }
+    .btn-green { background:#10b981; }
+    .btn-green:hover { background:#059669; }
+    
+    .btn-ghost { background:transparent; border:1px solid #d1d5db; color:#374151; padding:8px 16px; border-radius:8px; cursor:pointer;}
+    .btn-ghost:hover { background:#f3f4f6; }
+
+    .small-muted { color:#6b7280; font-size:12px; }
+    .duration-badge { background:rgba(255,255,255,0.9); color:#0b1220; padding:4px 8px; border-radius:20px; font-size:12px; font-weight:bold; margin-left:8px; display:inline-block; }
+
+    #loader-overlay { display:none; position:fixed; inset:0; background:rgba(255,255,255, 0.5); backdrop-filter: blur(2px); z-index:9999; align-items:center; justify-content:center; }
+    #loader-spinner { width:22px; height:22px; border-radius:50%; border:5px solid rgba(30,144,255,0.2); border-top-color:#3b82f6; animation:spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+  .backButton{
+    background-color: #6b7280;
+    color: #90EE90; /* Light Green */
+    border: 1px solid transparent; /* Optional: remove border if not desired */
+    transition: all 0.3s ease;
+}
+
+.backButton:hover {
+    background-color: rgba(144, 238, 144, 0.2); /* Light green background on hover */
+    color: #10b981; /* Darker green on hover for contrast */
+}
+    @media (max-width:720px){
+      .landing-card{ width: 100%; box-sizing: border-box;}
+      .modal{ width:92%; padding: 20px;}
+      .title { font-size:32px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="app">
+    <div id="loader-overlay"><div id="loader-spinner"></div></div>
+
+    <div class="header">
+      <div class="title">HOUSEKEEPING</div>
+      <div class="subtitle">Hotel Room & Area Management System</div>
+    </div>
+
+    <div id="landing" style="display:block;">
+      <div class="top-cards">
+        <div class="landing-card" onclick="openSection('rooms')">
+          <div style="height:48px;width:48px;background:#eef2ff;color:#4f46e5;border-radius:12px;margin-bottom:16px;display:flex;align-items:center;justify-content:center;">
+             <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          </div>
+          <h3>Room Cleaning</h3>
+          <p>Manage hotel guest rooms and suite housekeeping status.</p>
+          <div class="enter">Enter System →</div>
+        </div>
+
+        <div class="landing-card" onclick="openSection('areas')">
+          <div style="height:48px;width:48px;background:#f0fdf4;color:#16a34a;border-radius:12px;margin-bottom:16px;display:flex;align-items:center;justify-content:center;">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          </div>
+          <h3>Public Area</h3>
+          <p>Manage lobbies, hallways, and other common spaces.</p>
+          <div class="enter">Enter System →</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="mainView" style="display:none;">
+      <div style="margin-bottom:16px;">
+        <button class="backButton" onclick="goBack()">← Back to Menu</button>
+      </div>
+      
+      <div class="pill" style="width:100%; display:flex; align-items:center; justify-content:space-between; box-sizing: border-box;">
+        <div id="totalInfo" style="font-weight: 600;">Total Records: 0</div>
+        <div class="counts" id="countsSummary"></div>
+      </div>
+
+      <div class="toolbar">
+        <input class="search" id="search" placeholder="Search..." oninput="renderCards()" />
+        <select id="floorFilter" onchange="renderCards()"><option value="">All Floors</option></select>
+        <select id="statusFilter" onchange="renderCards()">
+          <option value="">All Status</option>
+          <option value="Dirty">Dirty</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Clean">Clean</option>
+        </select>
+        <div style="margin-left:auto;">
+          <button onclick="toggleView()" class="btn btn-ghost" id="viewToggle">Change View</button>
+        </div>
+      </div>
+
+      <div id="contentArea"><div class="sections" id="sections"></div></div>
+    </div>
+  </div>
+
+  <div id="modalWrap" style="display:none;"></div>
+
+<script>
+  // --- Mock Environment for Canvas Preview (unchanged) ---
+  if (typeof google === 'undefined') {
+    console.log("Running in Mock Mode for preview purposes.");
+    let mockDb = {
+      rooms: [
+        {id: 'r1', roomNumber: '101', floor: 'Floor 1', status: 'Dirty', assignedTo: '', timeIn: '', timeOut: ''},
+        {id: 'r2', roomNumber: '102', floor: 'Floor 1', status: 'In Progress', assignedTo: 'PANKAJ LOHAR', timeIn: '2/28/2026, 1:00:00 PM', timeOut: ''},
+        {id: 'r3', roomNumber: '201', floor: 'Floor 2', status: 'Clean', assignedTo: 'ROJIKA TAMANG', timeIn: '2/28/2026, 11:30:00 AM', timeOut: '2/28/2026, 12:15:00 PM'}
+      ],
+      areas: [
+        {id: 'a1', location: 'Floor 1', name: 'lobby', status: 'Dirty', assignedTo: '', timeIn: '', timeOut: ''},
+        {id: 'a2', location: 'Floor 1', name: 'kitchen', status: 'In Progress', assignedTo: 'BISHAL THAPA', timeIn: '2/28/2026, 2:00:00 PM', timeOut: ''}
+      ],
+      staff: [
+        {name: 'BISHAL THAPA', role: 'HK SUPVERVISOR'},
+        {name: 'PANKAJ LOHAR', role: 'HOUSE KEEPING'},
+        {name: 'PREM KHARIA', role: 'HOUSE KEEPING'},
+        {name: 'ROJIKA TAMANG', role: 'TR. HK SUPVERVISOR'}
+      ]
+    };
+
+    const calcCounts = () => ({
+      totalRooms: mockDb.rooms.length,
+      dirty: mockDb.rooms.filter(r=>r.status==='Dirty').length,
+      inProgress: mockDb.rooms.filter(r=>r.status==='In Progress').length,
+      clean: mockDb.rooms.filter(r=>r.status==='Clean').length,
+      totalAreas: mockDb.areas.length,
+      areaDirty: mockDb.areas.filter(a=>a.status==='Dirty').length,
+      areaInProgress: mockDb.areas.filter(a=>a.status==='In Progress').length,
+      areaClean: mockDb.areas.filter(a=>a.status==='Clean').length,
+    });
+
+    window.google = {
+      script: {
+        run: {
+          withSuccessHandler: function(cb) { this.success = cb; return this; },
+          withFailureHandler: function(cb) { this.failure = cb; return this; },
+          getInitialData: function() {
+            setTimeout(() => { this.success({ ...mockDb, counts: calcCounts() }); }, 600);
+          },
+          updateRoom: function(data) {
+            setTimeout(() => {
+              let r = mockDb.rooms.find(x => x.id === data.id);
+              if(r) {
+                r.status = data.status;
+                if (data.assignedTo !== undefined) r.assignedTo = data.assignedTo;
+                let d = new Date(); let ds = `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}, ${d.toLocaleTimeString()}`;
+                if(data.setTimeIn) { r.timeIn = ds; r.timeOut = ''; }
+                if(data.setTimeOut) { r.timeOut = ds; }
+                if(data.reset) { r.timeIn=''; r.timeOut=''; r.assignedTo=''; }
+              }
+              this.success({ ...mockDb, counts: calcCounts() });
+            }, 500);
+          },
+          updateArea: function(data) {
+            setTimeout(() => {
+              let a = mockDb.areas.find(x => x.id === data.id);
+              if(a) {
+                a.status = data.status;
+                if (data.assignedTo !== undefined) a.assignedTo = data.assignedTo;
+                let d = new Date(); let ds = `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}, ${d.toLocaleTimeString()}`;
+                if(data.setTimeIn) { a.timeIn = ds; a.timeOut = ''; }
+                if(data.setTimeOut) { a.timeOut = ds; }
+                if(data.reset) { a.timeIn=''; a.timeOut=''; a.assignedTo=''; }
+              }
+              this.success({ ...mockDb, counts: calcCounts() });
+            }, 500);
+          }
+        }
+      }
+    };
+  }
+  // --- End Mock Environment ---
+
+  // Application state
+  let DATA = { rooms: [], areas: [], staff: [], counts: {} };
+  let currentSection = 'rooms';
+  let viewMode = 'grid';
+
+  // Normalizes many possible section strings into exactly 'rooms' or 'areas'
+  function normalizeSection(section) {
+    if (!section) return 'rooms';
+    const s = String(section).trim().toLowerCase();
+    if (s.includes('room')) return 'rooms';
+    if (s.includes('area') || s.includes('public')) return 'areas';
+    if (s === 'rooms' || s === 'areas') return s;
+    // fallback to rooms to avoid surprises
+    return 'rooms';
+  }
+
+  function openSection(section) {
+    currentSection = normalizeSection(section);
+    document.getElementById('landing').style.display = 'none';
+    document.getElementById('mainView').style.display = 'block';
+    document.getElementById('search').value = '';
+    document.getElementById('search').placeholder = currentSection === 'rooms' ? "Search room..." : "Search area...";
+    getDataFromServer();
+  }
+
+  function goBack() {
+    document.getElementById('mainView').style.display = 'none';
+    document.getElementById('landing').style.display = 'block';
+  }
+
+  function showLoader(){ document.getElementById('loader-overlay').style.display = 'flex'; }
+  function hideLoader(){ document.getElementById('loader-overlay').style.display = 'none'; }
+
+  function getDataFromServer() {
+    showLoader();
+    console.log('[getDataFromServer] requesting initial data for section:', currentSection);
+    google.script.run
+      .withSuccessHandler(function(res){
+        if (!res) {
+          hideLoader();
+          alert('Server returned no data.');
+          return;
+        }
+        DATA = res;
+        populateFloorFilter();
+        updateCounts();
+        renderCards();
+        hideLoader();
+      })
+      .withFailureHandler(function(err){
+        hideLoader();
+        console.error('[getDataFromServer] failure', err);
+        alert('Error loading data.');
+      })
+      .getInitialData();
+  }
+
+  function populateFloorFilter() {
+    const floors = new Set();
+    const list = currentSection === 'rooms' ? (DATA.rooms || []) : (DATA.areas || []);
+    list.forEach(item => floors.add((currentSection === 'rooms' ? item.floor : item.location) || 'Unassigned'));
+    const sel = document.getElementById('floorFilter');
+    sel.innerHTML = '<option value="">All Floors</option>';
+    Array.from(floors).sort().forEach(f => sel.insertAdjacentHTML('beforeend', `<option value="${f}">${f}</option>`));
+  }
+
+  function updateCounts() {
+    const c = DATA.counts || {};
+    if (currentSection === 'rooms') {
+      document.getElementById('totalInfo').textContent = 'Total Rooms: ' + (c.totalRooms || (DATA.rooms||[]).length);
+      document.getElementById('countsSummary').innerHTML = `<span style="color:#ef4444">Dirty: ${c.dirty || 0}</span> &nbsp;|&nbsp; <span style="color:#f59e0b">In Prog: ${c.inProgress || 0}</span> &nbsp;|&nbsp; <span style="color:#10b981">Clean: ${c.clean || 0}</span>`;
+    } else {
+      document.getElementById('totalInfo').textContent = 'Total Areas: ' + (c.totalAreas || (DATA.areas||[]).length);
+      document.getElementById('countsSummary').innerHTML = `<span style="color:#ef4444">Dirty: ${c.areaDirty || 0}</span> &nbsp;|&nbsp; <span style="color:#f59e0b">In Prog: ${c.areaInProgress || 0}</span> &nbsp;|&nbsp; <span style="color:#10b981">Clean: ${c.areaClean || 0}</span>`;
+    }
+  }
+
+  function getDurationText(timeIn, timeOut) {
+    if (!timeIn || !timeOut) return '';
+    let t1 = new Date(timeIn); let t2 = new Date(timeOut);
+    if (isNaN(t1) || isNaN(t2)) return '';
+    let diffMs = t2 - t1;
+    if (diffMs < 0) return '';
+    let diffMins = Math.floor(diffMs / 60000);
+    let hours = Math.floor(diffMins / 60);
+    let mins = diffMins % 60;
+    if (hours > 0) return `${hours}h ${mins}m`;
+    return `${mins}m`;
+  }
+
+  function renderCards() {
+    const container = document.getElementById('sections');
+    container.innerHTML = '';
+    const search = (document.getElementById('search').value || '').trim().toLowerCase();
+    const floorFilter = document.getElementById('floorFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+
+    const list = currentSection === 'rooms' ? (DATA.rooms || []) : (DATA.areas || []);
+    const groups = {};
+    list.forEach(item => {
+      const key = currentSection === 'rooms' ? (item.floor || 'Unassigned') : (item.location || 'Unassigned');
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(item);
+    });
+
+    Object.keys(groups).sort().forEach(g => {
+      const items = groups[g].filter(it => {
+        const matchText = (it.roomNumber || it.name || '').toString().toLowerCase();
+        if (search && !matchText.includes(search)) return false;
+        if (floorFilter && String(currentSection === 'rooms' ? it.floor : it.location) !== floorFilter) return false;
+        if (statusFilter && String(it.status || 'Dirty') !== statusFilter) return false;
+        return true;
+      });
+
+      if (!items.length) return;
+
+      container.insertAdjacentHTML('beforeend', `<div class="floor-title">${g}</div>`);
+      const wrapper = document.createElement('div');
+      wrapper.className = viewMode;
+      container.appendChild(wrapper);
+
+      items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        const s = (item.status || 'Dirty');
+        const isClean = s.toLowerCase().includes('clean');
+        if (isClean) card.style.background = 'linear-gradient(135deg,#10b981,#059669)';
+        else if (s.toLowerCase().includes('in progress')) card.style.background = 'linear-gradient(135deg,#f59e0b,#d97706)';
+        else card.style.background = 'linear-gradient(135deg,#fb7185,#ef4444)';
+
+        const assignTxt = item.assignedTo ? item.assignedTo : 'Unassigned';
+        const dur = getDurationText(item.timeIn, item.timeOut);
+        const durBadge = dur ? `<span class="duration-badge">⏱ ${dur}</span>` : '';
+
+        if (viewMode === 'grid') {
+          if (currentSection === 'rooms') {
+            card.innerHTML = `
+              <div style="font-weight:700; font-size:12px; opacity:0.9;">ROOM</div>
+              <div class="room-number">${item.roomNumber}</div>
+              <div style="margin:12px 0;"><div class="status-pill">${s}</div>${durBadge}</div>
+              <div class="meta">${assignTxt}</div>`;
+          } else {
+            card.innerHTML = `
+              <div class="area-name">${item.name}</div>
+              <div style="margin:12px 0;"><div class="status-pill">${s}</div>${durBadge}</div>
+              <div class="meta">${assignTxt}</div>`;
+          }
+        } else {
+          // list view
+          card.innerHTML = `
+            <div style="width: 150px;" class="${currentSection==='rooms'?'room-number':'area-name'}">${currentSection==='rooms'?`RM ${item.roomNumber}`:item.name}</div>
+            <div style="width: 180px;"><div class="status-pill">${s}</div>${durBadge}</div>
+            <div class="meta" style="flex:1;">${assignTxt}</div>`;
+        }
+
+        // attach click
+        card.onclick = () => openWizardModal(item, currentSection);
+        wrapper.appendChild(card);
+      });
+    });
+  }
+
+  function toggleView() { viewMode = viewMode === 'grid' ? 'list' : 'grid'; renderCards(); }
+
+  function generateStaffOptions() {
+    return (DATA.staff || []).map(s => `<option value="${s.name}">${s.name} — ${s.role || ''}</option>`).join('');
+  }
+
+  // Unified Wizard Modal (robust + optimistic update)
+  function openWizardModal(item, sectionRaw) {
+    const section = normalizeSection(sectionRaw);
+    const wrap = document.getElementById('modalWrap');
+    wrap.innerHTML = '';
+
+    if (!item || !item.id) {
+      console.error('[openWizardModal] invalid item', item);
+      alert('This item has no ID. Cannot open modal.');
+      return;
+    }
+
+    const isDirty = (item.status || 'Dirty') === 'Dirty' || !item.status;
+    const isInProg = String(item.status || '').toLowerCase().includes('in progress') || item.status === 'In Progress';
+    const isClean = String(item.status || '').toLowerCase().includes('clean');
+
+    const itemName = section === 'rooms' ? `Room ${item.roomNumber || ''}` : (item.name || 'Area');
+    const statusColor = isClean ? '#10b981' : isInProg ? '#f59e0b' : '#ef4444';
+
+    // Assignee UI
+    let assignUI = '';
+    if (isDirty) {
+      assignUI = `
+        <div class="field">
+          <label>Assign to Staff Member</label>
+          <select id="assignSelect" class="large-select">
+            <option value="">-- Select Staff --</option>
+            ${generateStaffOptions()}
+          </select>
+        </div>`;
+    } else {
+      assignUI = `
+        <div class="field">
+          <label>Select Staff</label>
+          <div class="readonly-value" style="color:#2563eb; font-weight:700;">
+            ${item.assignedTo || 'Unknown'}
+            <span style="float:right; color:#f59e0b; font-size:12px; margin-top:2px;">${item.status || ''}</span>
+          </div>
+        </div>`;
+    }
+
+    let actionUI = '';
+    if (isDirty) {
+      actionUI = `<button id="actionBtn" class="btn-block btn-orange">Mark In Progress</button>`;
+    } else if (isInProg) {
+      actionUI = `<button id="actionBtn" class="btn-block btn-green">Mark Clean</button>`;
+    } else {
+      actionUI = `<div style="text-align:center; padding:12px; background:#f0fdf4; border-radius:8px; color:#16a34a; font-weight:bold;">Cleaning Completed</div>`;
+    }
+
+    const box = document.createElement('div');
+    box.className = 'modal';
+    box.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h4 style="margin:0; font-size:20px;">${itemName}</h4>
+        <button id="closeIcon" style="border:none; background:none; font-size:24px; color:#6b7280; cursor:pointer;">&times;</button>
+      </div>
+      <hr style="border:0; border-top:1px solid #e5e7eb; margin: 16px 0;">
+      ${assignUI}
+      <div class="field">
+        <label>Your Status</label>
+        ${actionUI}
+        ${!isClean ? `<div class="small-muted" style="margin-top:8px;">Mark <b>In Progress</b> to start, then <b>Clean</b> when done.</div>` : ''}
+      </div>
+      <div class="field">
+        <label>Your Time In </label>
+        <input type="text" readonly class="readonly-input" value="${item.timeIn || 'Not set'}">
+      </div>
+      <div class="field">
+        <label>Your Time Out </label>
+        <input type="text" readonly class="readonly-input" value="${item.timeOut || 'Not set'}">
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:24px;">
+        <div>
+          ${isClean ? `<button class="btn-ghost" id="resetBtn" style="color:#ef4444; border:none; padding:0; font-size:13px; text-decoration:underline;">Reset to Dirty</button>` : ''}
+        </div>
+        <button class="btn-ghost" id="closeBtn">Close</button>
+      </div>
+    `;
+
+    const back = document.createElement('div');
+    back.className = 'modal-back';
+    back.appendChild(box);
+    wrap.appendChild(back);
+    wrap.style.display = 'block';
+
+    const closeFn = () => wrap.style.display='none';
+    document.getElementById('closeIcon').onclick = closeFn;
+    document.getElementById('closeBtn').onclick = closeFn;
+
+    const btn = document.getElementById('actionBtn');
+    if (btn) {
+      btn.onclick = () => {
+        // Validate selection for starting
+        let payload = { id: item.id, type: section };
+
+        if (isDirty) {
+          const assign = document.getElementById('assignSelect').value;
+          if (!assign) return alert('Please select a staff member to start.');
+          payload.assignedTo = assign;
+          payload.status = 'In Progress';
+          payload.setTimeIn = true;
+        } else if (isInProg) {
+          payload.status = 'Clean';
+          payload.setTimeOut = true;
+        } else {
+          return;
+        }
+
+        // Immediate optimistic UI update so user sees color/time change right away
+        const prevState = { ...item };
+        try {
+          // apply optimistic changes locally
+          if (payload.assignedTo !== undefined) item.assignedTo = payload.assignedTo;
+          item.status = payload.status;
+          if (payload.setTimeIn) {
+            const d = new Date(); item.timeIn = `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}, ${d.toLocaleTimeString()}`; item.timeOut = '';
+          }
+          if (payload.setTimeOut) {
+            const d = new Date(); item.timeOut = `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}, ${d.toLocaleTimeString()}`;
+          }
+          renderCards();
+        } catch (err) {
+          console.warn('[optimistic update failed]', err);
+        }
+
+        showLoader();
+        const methodStr = section === 'rooms' ? 'updateRoom' : 'updateArea';
+        console.log('[update] calling', methodStr, 'payload=', payload);
+
+        // Defensive: check that google.script.run has the function
+        if (!google || !google.script || !google.script.run || typeof google.script.run[methodStr] !== 'function') {
+          hideLoader();
+          console.error(`[update] server method ${methodStr} not found on google.script.run`);
+          alert(`Server method ${methodStr} not found. Please check your Apps Script names (should be ${methodStr}).`);
+          // rollback UI to previous state to avoid confusion
+          Object.assign(item, prevState);
+          renderCards();
+          closeFn();
+          return;
+        }
+
+        google.script.run
+          .withSuccessHandler(res => {
+            if (!res) {
+              console.warn('[update] server returned empty response');
+              alert('Server returned no data after update; please refresh.');
+            } else {
+              DATA = res; // trust server as source of truth
+              populateFloorFilter(); updateCounts(); renderCards();
+            }
+            hideLoader(); closeFn();
+          })
+          .withFailureHandler(err => {
+            console.error('[update] failure', err);
+            hideLoader();
+            alert('Error updating data on server. Reverting UI.');
+            // try to revert optimistic change
+            Object.assign(item, prevState);
+            renderCards();
+            closeFn();
+          })[methodStr](payload);
+      };
+    }
+
+    const rstBtn = document.getElementById('resetBtn');
+    if (rstBtn) {
+      rstBtn.onclick = () => {
+        if(!confirm("Are you sure you want to reset this item to Dirty? This clears the time logs.")) return;
+        showLoader();
+        const payload = { id: item.id, status: 'Dirty', reset: true, type: section };
+        const methodStr = section === 'rooms' ? 'updateRoom' : 'updateArea';
+        console.log('[reset] calling', methodStr, payload);
+
+        if (!google || !google.script || !google.script.run || typeof google.script.run[methodStr] !== 'function') {
+          hideLoader();
+          alert(`Server method ${methodStr} not found. Please check your Apps Script.`);
+          return;
+        }
+
+        google.script.run
+          .withSuccessHandler(res => { DATA = res; populateFloorFilter(); updateCounts(); renderCards(); hideLoader(); closeFn(); })
+          .withFailureHandler(err => { hideLoader(); alert('Error resetting.'); })
+          [methodStr](payload);
+      }
+    }
+  }
+</script>
+</body>
+</html>
